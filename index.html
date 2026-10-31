@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>保單訊息小幫手</title>
+<style>
+  :root { --bg:#f4f6f3; --card:#fff; --fg:#1d2a24; --muted:#5f6f67; --accent:#128c4a; --warn:#b54708; --line:#d9e0db; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.55 system-ui,-apple-system,"PingFang HK","Noto Sans TC",sans-serif; }
+  header { padding:20px 16px 4px; max-width:1100px; margin:auto; }
+  h1 { font-size:1.4rem; margin:0 0 4px; }
+  header p { margin:0; color:var(--muted); font-size:.95rem; }
+  main { max-width:1100px; margin:auto; padding:12px 16px 40px; display:grid; gap:16px; grid-template-columns:1fr 1fr; }
+  @media (max-width:820px){ main { grid-template-columns:1fr; } }
+  section { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; }
+  h2 { font-size:1.05rem; margin:0 0 10px; }
+  label { display:block; font-size:.9rem; color:var(--muted); margin:10px 0 4px; }
+  input, textarea, select { width:100%; font:inherit; padding:9px 10px; border:1px solid var(--line); border-radius:9px; background:#fff; color:inherit; }
+  textarea { resize:vertical; }
+  #paste { min-height:150px; }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .btns { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  button { font:inherit; border:0; border-radius:9px; padding:10px 14px; cursor:pointer; background:#e7ece9; color:var(--fg); }
+  button.primary { background:var(--accent); color:#fff; font-weight:600; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline:3px solid #8fd3ad; outline-offset:1px; }
+  #out { white-space:pre-wrap; background:#e9f6ee; border:1px solid #c5e6d1; border-radius:10px; padding:12px; min-height:300px; font-size:.95rem; }
+  .miss { background:#ffe7c2; color:var(--warn); border-radius:4px; padding:0 3px; }
+  #status { min-height:1.4em; margin-top:8px; font-size:.92rem; color:var(--accent); }
+  #status.warn { color:var(--warn); }
+  details { margin-top:4px; }
+  summary { cursor:pointer; font-weight:600; }
+  #tpl { min-height:380px; font-size:.88rem; }
+  .hint { font-size:.85rem; color:var(--muted); }
+  .full { grid-column:1/-1; }
+  code { background:#eef1ef; padding:0 4px; border-radius:4px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>✈️ 保單訊息小幫手</h1>
+  <p>把投保成功畫面的文字貼上，自動抽出資料，生成 WhatsApp 訊息。所有資料只在這部裝置處理，不會上傳。</p>
+</header>
+<main>
+  <section>
+    <h2>① 貼上投保成功畫面的文字</h2>
+    <textarea id="paste" placeholder="在投保完成頁面全選 → 複製 → 貼在這裏"></textarea>
+    <div class="btns">
+      <button class="primary" id="btnParse">抽取資料</button>
+      <button id="btnClear">清除全部</button>
+    </div>
+
+    <h2 style="margin-top:18px">② 核對資料（可直接修改）</h2>
+    <label for="f_policy">保單號碼</label>
+    <input id="f_policy" autocomplete="off">
+    <div class="row">
+      <div><label for="f_start">承保開始日期</label><input id="f_start" placeholder="日/月/年" autocomplete="off"></div>
+      <div><label for="f_end">承保結束日期</label><input id="f_end" placeholder="日/月/年" autocomplete="off"></div>
+    </div>
+    <label for="f_region">目的地區域</label>
+    <select id="f_region">
+      <option>亞洲及指定島嶼</option>
+      <option>中國及澳門</option>
+      <option>全球</option>
+      <option value="__custom">其他（自行輸入）</option>
+    </select>
+    <input id="f_regionCustom" placeholder="輸入目的地區域" style="display:none;margin-top:6px">
+    <label for="f_amount">扣除折扣後及徵費總額（港幣）</label>
+    <input id="f_amount" inputmode="decimal" autocomplete="off">
+    <label for="f_insured">受保人（只在範本有 <code>{受保人}</code> 時使用）</label>
+    <input id="f_insured" autocomplete="off">
+    <label for="f_contact">你的聯絡電話（會記住，不用每次輸入）</label>
+    <input id="f_contact" inputmode="tel" autocomplete="off">
+    <label for="f_client">客人 WhatsApp 號碼（選填，用來直接開對話）</label>
+    <input id="f_client" inputmode="tel" placeholder="例如 91234567" autocomplete="off">
+  </section>
+
+  <section>
+    <h2>③ 生成的訊息</h2>
+    <div id="out" aria-live="polite"></div>
+    <div class="btns">
+      <button class="primary" id="btnCopy">📋 複製訊息</button>
+      <button id="btnWa">💬 用 WhatsApp 傳送</button>
+    </div>
+    <div id="status" role="status"></div>
+  </section>
+
+  <section class="full">
+    <details>
+      <summary>⚙️ 修改訊息範本</summary>
+      <p class="hint">可用欄位：<code>{保單號碼}</code> <code>{承保日期}</code> <code>{目的地區域}</code> <code>{聯絡電話}</code> <code>{總額}</code> <code>{受保人}</code>。修改後自動儲存在這部裝置。</p>
+      <textarea id="tpl"></textarea>
+      <div class="btns"><button id="btnReset">還原預設範本</button></div>
+    </details>
+  </section>
+</main>
+
+<script>
+const DEFAULT_TPL = `✈️ 感謝你投保英國保誠旅遊保!✈️📅
+
+以下為保障注意事項:
+
+保單號碼:  {保單號碼}
+
+承保日期:    {承保日期}
+
+目的地區域 : {目的地區域}
+
+1)旅遊不適😷請先於當地註冊醫生處求診
+
+2)財物遺失或被偷🚓,立即通知第三機構(如警局/機場或領事館)作出文件證明(報失請於24小時內)
+
+3)財物毀壞請將原件一律帶回,或以📷相片作紀錄
+
+4)恐怖襲擊💣🔫均受保障
+
+5)旅程延誤超過5小時,行李延誤超過8小時⏰或遺失或損毀🎒需要航空公司證明信作理賠。
+
+6)手提📱或SIM卡於旅遊保障中不受保
+
+7)若於當地旅行駕駛🚕或高風險活動🏄(如潛水、降傘、熱氣球等)
+
+於旅遊前請查詢
+
+8)旅行前若許可請將身上財物📷作相片紀錄
+
+9)☎緊急熱線: 28620111或
+
+旅遊途中有任何突發事，隨時聯絡本人  {聯絡電話}，讓我告知有關理賠的程序👣。
+
+10)回港後請提供收據/單據/證明文件以作索償之用!💰
+
+祝旅途愉快!!❤閣下正式保障文件及已傳送至電子郵箱!
+
+🌟詳細保障內容請參閱保障文件! 已電郵給閣下。📧💌
+
+P.S 已存在疾病並不受是次旅保保障範圍,詳細資料請參閱保單條款!
+
+😉如果將來旅遊，歡迎隨時再告訴我日子，以優惠價再購買旅遊保，安心出發✈️。
+
+歡迎咨詢有關退休👵🏻、強積金💰、儲蓄🌳、教育👶🏻、醫療💉、保障☂的理財意見。
+
+扣除折扣後及徵費總額:港幣$ {總額}`;
+
+const $ = id => document.getElementById(id);
+const K_TPL = "pm.template.v1", K_CONTACT = "pm.contact.v1";
+const MONTHS = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12};
+
+function normalize(s) {
+  return s.replace(/[！-～]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+          .replace(/　/g, " ").replace(/\r/g, "");
+}
+const pad = n => String(n).padStart(2, "0");
+const fmt = d => `${pad(d.d)}/${pad(d.m)}/${d.y}`;
+const valid = d => d.m >= 1 && d.m <= 12 && d.d >= 1 && d.d <= 31 && d.y >= 2000 && d.y <= 2100;
+const key = d => d.y * 10000 + d.m * 100 + d.d;
+
+function findDates(t) {
+  const found = [];
+  const add = (idx, y, m, d) => { const o = {idx, y:+y, m:+m, d:+d}; if (valid(o)) found.push(o); };
+  let r;
+  const ymd = /(\d{4})\s*[\/\-.年]\s*(\d{1,2})\s*[\/\-.月]\s*(\d{1,2})/g;
+  while ((r = ymd.exec(t))) add(r.index, r[1], r[2], r[3]);
+  const dmy = /(?<!\d)(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})(?!\d)/g;
+  while ((r = dmy.exec(t))) add(r.index, r[3], r[2], r[1]);
+  const dMy = /(?<!\d)(\d{1,2})[\s\-]*(jan|feb|mar|apr|may|jun|jul|aug|sept?|oct|nov|dec)[a-z]*\.?[\s\-,]*(\d{4})/gi;
+  while ((r = dMy.exec(t))) add(r.index, r[3], MONTHS[r[2].toLowerCase()], r[1]);
+  const Mdy = /(jan|feb|mar|apr|may|jun|jul|aug|sept?|oct|nov|dec)[a-z]*\.?\s+(\d{1,2}),?\s*(\d{4})/gi;
+  while ((r = Mdy.exec(t))) add(r.index, r[3], MONTHS[r[1].toLowerCase()], r[2]);
+  found.sort((a, b) => a.idx - b.idx);
+  const seen = new Set();
+  return found.filter(d => { const k = d.idx; if (seen.has(k)) return false; seen.add(k); return true; })
+    .map(d => ({...d, ctx: t.slice(Math.max(0, d.idx - 30), d.idx)}));
+}
+
+function pickPeriod(t) {
+  const all = findDates(t);
+  const bad = /(出生|生日|birth|DOB|簽發|發出|發單|issue|付款|交易|payment|申請日期)[^\n]{0,20}$/i;
+  const good = /(承保|保障期|保險期|旅程|旅遊日期|出發|回程|生效|開始|結束|由|至|期間|period|effective|from|to|depart|return|start|end|cover)/i;
+  let cands = all.filter(d => !bad.test(d.ctx));
+  const labelled = cands.filter(d => good.test(d.ctx));
+  if (labelled.length) cands = cands.filter(d => d.idx >= labelled[0].idx);
+  if (!cands.length) return [null, null];
+  const start = cands[0];
+  const end = cands.slice(1).find(d => key(d) >= key(start) && key(d) !== key(start)) || null;
+  return [start, end];
+}
+
+function pickPolicy(t) {
+  const re = /(保單(?:號碼|編號|號)|保險單號碼|policy\s*(?:no\.?|number|#))[\s:：#.]*(?:policy\s*(?:no\.?|number)[\s:：#.]*)?((?=[A-Z0-9\-\/]*\d)[A-Z0-9][A-Z0-9\-\/]{4,})/gi;
+  const m = re.exec(t);
+  return m ? m[2] : "";
+}
+
+function pickAmount(t) {
+  const re = /(總額|總保費|總金額|應付|實付|已付|付款金額|保費|total(?:\s*premium|\s*amount)?|amount\s*paid|premium)[^\d\n]{0,25}?(?:HK\$|HKD|港幣|港元|\$)?\s*([\d,]+(?:\.\d{1,2})?)/gi;
+  let r, best = null, bestScore = -1;
+  while ((r = re.exec(t))) {
+    const label = r[1].toLowerCase();
+    const score = /總額|total|實付|已付|應付|paid|付款/.test(label) ? 2 : 1;
+    if (score >= bestScore) { best = r[2]; bestScore = score; }
+  }
+  if (!best) {
+    const all = [...t.matchAll(/(?:HK\$|HKD|港幣|港元)\s*\$?\s*([\d,]+(?:\.\d{1,2})?)/gi)];
+    if (all.length) best = all[all.length - 1][1];
+  }
+  return best || "";
+}
+
+function pickRegion(t) {
+  if (/全球|worldwide/i.test(t)) return "全球";
+  if (/亞洲|asia/i.test(t)) return "亞洲及指定島嶼";
+  if (/中國.{0,3}澳門|mainland\s*china|macau/i.test(t)) return "中國及澳門";
+  return "";
+}
+
+function pickInsured(t) {
+  const m = t.match(/(受保人(?:姓名)?|被保險人|insured\s*(?:person|name)?s?)\s*[:：]?\s*([^\n]{2,60})/i);
+  return m ? m[2].trim() : "";
+}
+
+function parse() {
+  const t = normalize($("paste").value);
+  if (!t.trim()) { setStatus("請先貼上投保成功畫面的文字。", true); return; }
+  const got = [];
+  const policy = pickPolicy(t); if (policy) { $("f_policy").value = policy; got.push("保單號碼"); }
+  const [s, e] = pickPeriod(t);
+  if (s) { $("f_start").value = fmt(s); got.push("開始日期"); }
+  if (e) { $("f_end").value = fmt(e); got.push("結束日期"); }
+  const amt = pickAmount(t); if (amt) { $("f_amount").value = amt; got.push("總額"); }
+  const reg = pickRegion(t); if (reg) { setRegion(reg); got.push("目的地區域"); }
+  const ins = pickInsured(t); if (ins) { $("f_insured").value = ins; }
+  render();
+  const need = ["保單號碼","開始日期","結束日期","總額"].filter(x => !got.includes(x));
+  setStatus(need.length ? `已抽取：${got.join("、") || "沒有"}。請手動補上：${need.join("、")}。` : `已抽取全部資料（${got.join("、")}），請核對後複製。`, need.length > 0);
+}
+
+function setRegion(v) {
+  const sel = $("f_region");
+  if ([...sel.options].some(o => o.value === v)) { sel.value = v; $("f_regionCustom").style.display = "none"; }
+  else { sel.value = "__custom"; $("f_regionCustom").style.display = ""; $("f_regionCustom").value = v; }
+}
+function region() { return $("f_region").value === "__custom" ? $("f_regionCustom").value.trim() : $("f_region").value; }
+
+function values() {
+  const s = $("f_start").value.trim(), e = $("f_end").value.trim();
+  return {
+    "保單號碼": $("f_policy").value.trim(),
+    "承保日期": s && e ? `${s} 至 ${e}` : (s || e),
+    "目的地區域": region(),
+    "聯絡電話": $("f_contact").value.trim(),
+    "總額": $("f_amount").value.trim(),
+    "受保人": $("f_insured").value.trim(),
+  };
+}
+
+function build(markMissing) {
+  const v = values(); const missing = [];
+  const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+  const tpl = $("tpl").value;
+  const parts = tpl.split(/(\{[^{}\n]+\})/);
+  let text = "", html = "";
+  for (const p of parts) {
+    const m = p.match(/^\{([^{}\n]+)\}$/);
+    if (m && m[1] in v) {
+      const val = v[m[1]];
+      if (val) { text += val; html += esc(val); }
+      else { missing.push(m[1]); text += `<${m[1]}>`; html += `<span class="miss">&lt;${esc(m[1])}&gt;</span>`; }
+    } else { text += p; html += esc(p); }
+  }
+  return {text, html, missing: [...new Set(missing)]};
+}
+
+function render() { $("out").innerHTML = build().html; }
+
+function setStatus(msg, warn) { const s = $("status"); s.textContent = msg; s.className = warn ? "warn" : ""; }
+
+async function copy() {
+  const {text, missing} = build();
+  try { await navigator.clipboard.writeText(text); }
+  catch { const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); }
+  setStatus(missing.length ? `已複製，但仍有未填：${missing.join("、")}。` : "✅ 已複製！去 WhatsApp 貼上即可。", missing.length > 0);
+}
+
+function sendWa() {
+  const {text, missing} = build();
+  if (missing.length && !confirm(`仍有未填：${missing.join("、")}。照樣傳送？`)) return;
+  let num = $("f_client").value.replace(/\D/g, "");
+  if (num.length === 8) num = "852" + num;
+  location.href = (num ? `https://wa.me/${num}` : "https://wa.me/") + "?text=" + encodeURIComponent(text);
+}
+
+$("tpl").value = localStorage.getItem(K_TPL) || DEFAULT_TPL;
+$("f_contact").value = localStorage.getItem(K_CONTACT) || "";
+$("btnParse").onclick = parse;
+$("paste").addEventListener("paste", () => setTimeout(parse, 0));
+$("btnClear").onclick = () => {
+  ["paste","f_policy","f_start","f_end","f_amount","f_insured","f_client","f_regionCustom"].forEach(id => $(id).value = "");
+  setRegion("亞洲及指定島嶼"); render(); setStatus("");
+};
+$("btnCopy").onclick = copy;
+$("btnWa").onclick = sendWa;
+$("btnReset").onclick = () => { if (confirm("還原為預設範本？你的修改會消失。")) { $("tpl").value = DEFAULT_TPL; localStorage.removeItem(K_TPL); render(); } };
+$("tpl").addEventListener("input", () => { localStorage.setItem(K_TPL, $("tpl").value); render(); });
+$("f_contact").addEventListener("input", () => localStorage.setItem(K_CONTACT, $("f_contact").value.trim()));
+$("f_region").addEventListener("change", () => { $("f_regionCustom").style.display = $("f_region").value === "__custom" ? "" : "none"; render(); });
+document.querySelectorAll("input").forEach(el => el.addEventListener("input", render));
+render();
+</script>
+</body>
+</html>
