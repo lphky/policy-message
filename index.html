@@ -65,12 +65,14 @@
       <option value="__custom">其他（自行輸入）</option>
     </select>
     <input id="f_regionCustom" placeholder="輸入目的地區域" style="display:none;margin-top:6px">
-    <label for="f_amount">扣除折扣後及徵費總額（港幣）</label>
+    <label for="f_amount">折後保費總額（即「保費及徵費總額」，港幣）</label>
     <input id="f_amount" inputmode="decimal" autocomplete="off">
-    <label for="f_insured">受保人（只在範本有 <code>{受保人}</code> 時使用）</label>
-    <input id="f_insured" autocomplete="off">
-    <label for="f_contact">你的聯絡電話（會記住，不用每次輸入）</label>
-    <input id="f_contact" inputmode="tel" autocomplete="off">
+    <label for="f_insured">受保人（多於一人時每行一個）</label>
+    <textarea id="f_insured" rows="2" autocomplete="off"></textarea>
+    <div class="row">
+      <div><label for="f_name">你的名字（會記住）</label><input id="f_name" autocomplete="off"></div>
+      <div><label for="f_contact">你的電話（會記住）</label><input id="f_contact" inputmode="tel" autocomplete="off"></div>
+    </div>
     <label for="f_client">客人 WhatsApp 號碼（選填，用來直接開對話）</label>
     <input id="f_client" inputmode="tel" placeholder="例如 91234567" autocomplete="off">
   </section>
@@ -88,7 +90,7 @@
   <section class="full">
     <details>
       <summary>⚙️ 修改訊息範本</summary>
-      <p class="hint">可用欄位：<code>{保單號碼}</code> <code>{承保日期}</code> <code>{目的地區域}</code> <code>{聯絡電話}</code> <code>{總額}</code> <code>{受保人}</code>。修改後自動儲存在這部裝置。</p>
+      <p class="hint">可用欄位：<code>{保單號碼}</code> <code>{受保人}</code> <code>{保險期}</code> <code>{承保日期}</code> <code>{目的地區域}</code> <code>{總額}</code> <code>{名字}</code> <code>{聯絡電話}</code>。修改後自動儲存在這部裝置。</p>
       <textarea id="tpl"></textarea>
       <div class="btns"><button id="btnReset">還原預設範本</button></div>
     </details>
@@ -96,54 +98,10 @@
 </main>
 
 <script>
-const DEFAULT_TPL = `✈️ 感謝你投保英國保誠旅遊保!✈️📅
-
-以下為保障注意事項:
-
-保單號碼:  {保單號碼}
-
-承保日期:    {承保日期}
-
-目的地區域 : {目的地區域}
-
-1)旅遊不適😷請先於當地註冊醫生處求診
-
-2)財物遺失或被偷🚓,立即通知第三機構(如警局/機場或領事館)作出文件證明(報失請於24小時內)
-
-3)財物毀壞請將原件一律帶回,或以📷相片作紀錄
-
-4)恐怖襲擊💣🔫均受保障
-
-5)旅程延誤超過5小時,行李延誤超過8小時⏰或遺失或損毀🎒需要航空公司證明信作理賠。
-
-6)手提📱或SIM卡於旅遊保障中不受保
-
-7)若於當地旅行駕駛🚕或高風險活動🏄(如潛水、降傘、熱氣球等)
-
-於旅遊前請查詢
-
-8)旅行前若許可請將身上財物📷作相片紀錄
-
-9)☎緊急熱線: 28620111或
-
-旅遊途中有任何突發事，隨時聯絡本人  {聯絡電話}，讓我告知有關理賠的程序👣。
-
-10)回港後請提供收據/單據/證明文件以作索償之用!💰
-
-祝旅途愉快!!❤閣下正式保障文件及已傳送至電子郵箱!
-
-🌟詳細保障內容請參閱保障文件! 已電郵給閣下。📧💌
-
-P.S 已存在疾病並不受是次旅保保障範圍,詳細資料請參閱保單條款!
-
-😉如果將來旅遊，歡迎隨時再告訴我日子，以優惠價再購買旅遊保，安心出發✈️。
-
-歡迎咨詢有關退休👵🏻、強積金💰、儲蓄🌳、教育👶🏻、醫療💉、保障☂的理財意見。
-
-扣除折扣後及徵費總額:港幣$ {總額}`;
+const DEFAULT_TPL = "✈️ 感謝你投保英國保誠旅遊保!✈️😀\n\n以下為保障注意事項:\n\n保單號碼﹕{保單號碼}\n{受保人}\n\n保險期 : {保險期} (包括首尾兩天)\n目的地區域 : {目的地區域}\n折後保費總額：港幣${總額}\n1)旅遊不適😷請先於當地註冊醫生處求診\n2)財物遺失或被偷🚓,立即通知第三機構(如警局/機場或領事館)作出文件證明(報失請於24小時內)\n3)財物毀壞請將原件一律帶回,或以📷相片作紀錄\n4)暴動及恐怖襲擊💣均受保障\n5)旅程延誤超過5小時,行李延誤超過8小時⏰或遺失或損毀🎒需要航空公司證明信作理賠。費用的交通座位及 / 或住宿房間等級不能高於受保人原定行程表上的交通座位及 / 或住宿房間等級。\n6)手提📱或SIM卡於旅遊保障中不受保\n7)若於當地旅行駕駛🚕或高風險活動🏄(如潛水、降傘、熱氣球等)\n於旅遊前請查詢\n8)航空公司清盤均受保障\n9)旅行前若許可請將身上財物📷作相片紀錄\n\n☎️緊急熱線: 28620111或\n旅遊途中有任何突發事，隨時聯絡本人 {名字}: {聯絡電話}，讓我告知有關理賠的程序👣。\n\n回港後請提供登機證/收據/單據/證明文件以作索償之用!💰\n🌟詳細保障內容請參閱保障文件! 已電郵給閣下。📧💌\n\n🌈本人已在公司任職18年，常為客人做家庭理財計劃。歡迎咨詢有關退休👵🏻、強積金💰、儲蓄🌳、教育👶🏻、醫療💉、保障☂️的理財意見。\n祝旅途愉快!!❤️閣下正式保障文件已傳送至電子郵箱!\n\nP.S 已存在疾病並不受是次旅保保障範圍,詳細資料請參閱保單條款!\n😉如果將來旅遊，歡迎隨時再告訴我日子，以優惠價再購買旅遊保，安心出發✈️。\n\n🌈🌈若遇到有什麼問題，記得馬上找我，如果是香港晚上時間，請直接打電話給我，因為有些文件是補不回來的。";
 
 const $ = id => document.getElementById(id);
-const K_TPL = "pm.template.v1", K_CONTACT = "pm.contact.v1";
+const K_TPL = "pm.template.v2", K_CONTACT = "pm.contact.v1", K_NAME = "pm.name.v1";
 const MONTHS = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12};
 
 function normalize(s) {
@@ -193,6 +151,8 @@ function pickPolicy(t) {
 }
 
 function pickAmount(t) {
+  const exact = t.match(/(?:保費及徵費總額|扣除折扣後及徵費總額|徵費總額)[^\d\n]{0,15}?([\d,]+(?:\.\d{1,2})?)/);
+  if (exact) return exact[1];
   const re = /(總額|總保費|總金額|應付|實付|已付|付款金額|保費|total(?:\s*premium|\s*amount)?|amount\s*paid|premium)[^\d\n]{0,25}?(?:HK\$|HKD|港幣|港元|\$)?\s*([\d,]+(?:\.\d{1,2})?)/gi;
   let r, best = null, bestScore = -1;
   while ((r = re.exec(t))) {
@@ -208,6 +168,8 @@ function pickAmount(t) {
 }
 
 function pickRegion(t) {
+  const line = t.match(/目的地(?:區域|地區)?\s*[:：]\s*([^\n\t]+)/);
+  if (line && line[1].trim()) return line[1].trim();
   if (/全球|worldwide/i.test(t)) return "全球";
   if (/亞洲|asia/i.test(t)) return "亞洲及指定島嶼";
   if (/中國.{0,3}澳門|mainland\s*china|macau/i.test(t)) return "中國及澳門";
@@ -215,6 +177,20 @@ function pickRegion(t) {
 }
 
 function pickInsured(t) {
+  const lines = t.split("\n").map(s => s.trim());
+  const i = lines.findIndex(s => /^(受保人(?:姓名)?|被保險人)\s*[:：]/.test(s));
+  if (i >= 0) {
+    const out = [];
+    const first = lines[i].replace(/^[^:：]*[:：]\s*/, "");
+    if (first) out.push(first);
+    for (let j = i + 1; j < lines.length; j++) {
+      const s = lines[j];
+      if (!s) { if (out.length) break; else continue; }
+      if (/^[^\s]{2,10}\s*[:：]/.test(s) || /^(保險期|旅程|目的地|保費)/.test(s)) break;
+      out.push(s);
+    }
+    if (out.length) return out.join("\n");
+  }
   const m = t.match(/(受保人(?:姓名)?|被保險人|insured\s*(?:person|name)?s?)\s*[:：]?\s*([^\n]{2,60})/i);
   return m ? m[2].trim() : "";
 }
@@ -229,9 +205,9 @@ function parse() {
   if (e) { $("f_end").value = fmt(e); got.push("結束日期"); }
   const amt = pickAmount(t); if (amt) { $("f_amount").value = amt; got.push("總額"); }
   const reg = pickRegion(t); if (reg) { setRegion(reg); got.push("目的地區域"); }
-  const ins = pickInsured(t); if (ins) { $("f_insured").value = ins; }
+  const ins = pickInsured(t); if (ins) { $("f_insured").value = ins; got.push("受保人"); }
   render();
-  const need = ["保單號碼","開始日期","結束日期","總額"].filter(x => !got.includes(x));
+  const need = ["保單號碼","受保人","開始日期","結束日期","總額"].filter(x => !got.includes(x));
   setStatus(need.length ? `已抽取：${got.join("、") || "沒有"}。請手動補上：${need.join("、")}。` : `已抽取全部資料（${got.join("、")}），請核對後複製。`, need.length > 0);
 }
 
@@ -247,6 +223,8 @@ function values() {
   return {
     "保單號碼": $("f_policy").value.trim(),
     "承保日期": s && e ? `${s} 至 ${e}` : (s || e),
+    "保險期": s && e ? `${s} – ${e}` : (s || e),
+    "名字": $("f_name").value.trim(),
     "目的地區域": region(),
     "聯絡電話": $("f_contact").value.trim(),
     "總額": $("f_amount").value.trim(),
@@ -292,6 +270,7 @@ function sendWa() {
 
 $("tpl").value = localStorage.getItem(K_TPL) || DEFAULT_TPL;
 $("f_contact").value = localStorage.getItem(K_CONTACT) || "";
+$("f_name").value = localStorage.getItem(K_NAME) || "";
 $("btnParse").onclick = parse;
 $("paste").addEventListener("paste", () => setTimeout(parse, 0));
 $("btnClear").onclick = () => {
@@ -303,8 +282,9 @@ $("btnWa").onclick = sendWa;
 $("btnReset").onclick = () => { if (confirm("還原為預設範本？你的修改會消失。")) { $("tpl").value = DEFAULT_TPL; localStorage.removeItem(K_TPL); render(); } };
 $("tpl").addEventListener("input", () => { localStorage.setItem(K_TPL, $("tpl").value); render(); });
 $("f_contact").addEventListener("input", () => localStorage.setItem(K_CONTACT, $("f_contact").value.trim()));
+$("f_name").addEventListener("input", () => localStorage.setItem(K_NAME, $("f_name").value.trim()));
 $("f_region").addEventListener("change", () => { $("f_regionCustom").style.display = $("f_region").value === "__custom" ? "" : "none"; render(); });
-document.querySelectorAll("input").forEach(el => el.addEventListener("input", render));
+document.querySelectorAll("input, #f_insured").forEach(el => el.addEventListener("input", render));
 render();
 </script>
 </body>
