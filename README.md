@@ -5,5 +5,5 @@
 - 純前端單一檔案 `index.html`，資料不上傳；範本及顧問電話存在瀏覽器 localStorage。
 - 範本欄位：{保單號碼} {承保日期} {目的地區域} {聯絡電話} {總額} {受保人}
 - 抽取規則為通用推測（未有真實保誠畫面樣本），抽不到的欄位會以橙色標示，需手動補上。
-- GitHub Pages 舊版已依使用者 2026-11-02 指示下架（repo 保留）
+- 公開網站：https://porscheyeung.github.io/policy-message/ （GitHub `porscheyeung/policy-message`，main 根目錄 Pages；lphky/policy-message 的 Pages 已下架）
 - Zo 密碼保護版：https://lphky.zo.space/policy-message （zo.space 路由，讀取本資料夾 index.html）
