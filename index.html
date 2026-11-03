@@ -73,6 +73,8 @@
       <div><label for="f_name">你的名字（會記住）</label><input id="f_name" autocomplete="off"></div>
       <div><label for="f_contact">你的電話（會記住）</label><input id="f_contact" inputmode="tel" autocomplete="off"></div>
     </div>
+    <label for="f_intro">自我介紹（會記住）</label>
+    <textarea id="f_intro" rows="3" placeholder="輸入你的自我介紹，可加入 emoji"></textarea>
     <label for="f_client">客人 WhatsApp 號碼（選填，用來直接開對話）</label>
     <input id="f_client" inputmode="tel" placeholder="例如 91234567" autocomplete="off">
   </section>
@@ -90,7 +92,7 @@
   <section class="full">
     <details>
       <summary>⚙️ 修改訊息範本</summary>
-      <p class="hint">可用欄位：<code>{保單號碼}</code> <code>{受保人}</code> <code>{保險期}</code> <code>{承保日期}</code> <code>{目的地區域}</code> <code>{總額}</code> <code>{名字}</code> <code>{聯絡電話}</code>。修改後自動儲存在這部裝置。</p>
+      <p class="hint">可用欄位：<code>{保單號碼}</code> <code>{受保人}</code> <code>{保險期}</code> <code>{承保日期}</code> <code>{目的地區域}</code> <code>{總額}</code> <code>{名字}</code> <code>{聯絡電話}</code> <code>{自我介紹}</code>。修改後自動儲存在這部裝置。</p>
       <textarea id="tpl"></textarea>
       <div class="btns"><button id="btnReset">還原預設範本</button></div>
     </details>
@@ -98,10 +100,10 @@
 </main>
 
 <script>
-const DEFAULT_TPL = "✈️ 感謝你投保英國保誠旅遊保!✈️😀\n\n以下為保障注意事項:\n\n保單號碼﹕{保單號碼}\n{受保人}\n\n保險期 : {保險期} (包括首尾兩天)\n目的地區域 : {目的地區域}\n折後保費總額：港幣${總額}\n1)旅遊不適😷請先於當地註冊醫生處求診\n2)財物遺失或被偷🚓,立即通知第三機構(如警局/機場或領事館)作出文件證明(報失請於24小時內)\n3)財物毀壞請將原件一律帶回,或以📷相片作紀錄\n4)暴動及恐怖襲擊💣均受保障\n5)旅程延誤超過5小時,行李延誤超過8小時⏰或遺失或損毀🎒需要航空公司證明信作理賠。費用的交通座位及 / 或住宿房間等級不能高於受保人原定行程表上的交通座位及 / 或住宿房間等級。\n6)手提📱或SIM卡於旅遊保障中不受保\n7)若於當地旅行駕駛🚕或高風險活動🏄(如潛水、降傘、熱氣球等)\n於旅遊前請查詢\n8)航空公司清盤均受保障\n9)旅行前若許可請將身上財物📷作相片紀錄\n\n☎️緊急熱線: 28620111或\n旅遊途中有任何突發事，隨時聯絡本人 {名字}: {聯絡電話}，讓我告知有關理賠的程序👣。\n\n回港後請提供登機證/收據/單據/證明文件以作索償之用!💰\n🌟詳細保障內容請參閱保障文件! 已電郵給閣下。📧💌\n\n🌈本人已在公司任職18年，常為客人做家庭理財計劃。歡迎咨詢有關退休👵🏻、強積金💰、儲蓄🌳、教育👶🏻、醫療💉、保障☂️的理財意見。\n祝旅途愉快!!❤️閣下正式保障文件已傳送至電子郵箱!\n\nP.S 已存在疾病並不受是次旅保保障範圍,詳細資料請參閱保單條款!\n😉如果將來旅遊，歡迎隨時再告訴我日子，以優惠價再購買旅遊保，安心出發✈️。\n\n🌈🌈若遇到有什麼問題，記得馬上找我，如果是香港晚上時間，請直接打電話給我，因為有些文件是補不回來的。";
+const DEFAULT_TPL = "✈️ 感謝你投保英國保誠旅遊保!✈️😀\n\n以下為保障注意事項:\n\n保單號碼﹕{保單號碼}\n{受保人}\n\n保險期 : {保險期} (包括首尾兩天)\n目的地區域 : {目的地區域}\n折後保費總額：港幣${總額}\n1)旅遊不適😷請先於當地註冊醫生處求診\n2)財物遺失或被偷🚓,立即通知第三機構(如警局/機場或領事館)作出文件證明(報失請於24小時內)\n3)財物毀壞請將原件一律帶回,或以📷相片作紀錄\n4)暴動及恐怖襲擊💣均受保障\n5)旅程延誤超過5小時,行李延誤超過8小時⏰或遺失或損毀🎒需要航空公司證明信作理賠。費用的交通座位及 / 或住宿房間等級不能高於受保人原定行程表上的交通座位及 / 或住宿房間等級。\n6)手提📱或SIM卡於旅遊保障中不受保\n7)若於當地旅行駕駛🚕或高風險活動🏄(如潛水、降傘、熱氣球等)\n於旅遊前請查詢\n8)航空公司清盤均受保障\n9)旅行前若許可請將身上財物📷作相片紀錄\n\n☎️緊急熱線: 28620111或\n旅遊途中有任何突發事，隨時聯絡本人 {名字}: {聯絡電話}，讓我告知有關理賠的程序👣。\n\n回港後請提供登機證/收據/單據/證明文件以作索償之用!💰\n🌟詳細保障內容請參閱保障文件! 已電郵給閣下。📧💌\n\n{自我介紹}\n\nP.S 已存在疾病並不受是次旅保保障範圍,詳細資料請參閱保單條款!\n😉如果將來旅遊，歡迎隨時再告訴我日子，以優惠價再購買旅遊保，安心出發✈️。\n\n🌈🌈若遇到有什麼問題，記得馬上找我，如果是香港晚上時間，請直接打電話給我，因為有些文件是補不回來的。";
 
 const $ = id => document.getElementById(id);
-const K_TPL = "pm.template.v2", K_CONTACT = "pm.contact.v1", K_NAME = "pm.name.v1";
+const K_TPL = "pm.template.v3", K_CONTACT = "pm.contact.v1", K_NAME = "pm.name.v1", K_INTRO = "pm.intro.v1";
 const MONTHS = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12};
 
 function normalize(s) {
@@ -225,6 +227,7 @@ function values() {
     "承保日期": s && e ? `${s} 至 ${e}` : (s || e),
     "保險期": s && e ? `${s} – ${e}` : (s || e),
     "名字": $("f_name").value.trim(),
+    "自我介紹": $("f_intro").value.trim(),
     "目的地區域": region(),
     "聯絡電話": $("f_contact").value.trim(),
     "總額": $("f_amount").value.trim(),
@@ -268,9 +271,11 @@ function sendWa() {
   location.href = (num ? `https://wa.me/${num}` : "https://wa.me/") + "?text=" + encodeURIComponent(text);
 }
 
-$("tpl").value = localStorage.getItem(K_TPL) || DEFAULT_TPL;
+const savedTemplate = localStorage.getItem(K_TPL) ?? localStorage.getItem("pm.template.v2");
+$("tpl").value = savedTemplate ? savedTemplate.replace("🌈本人已在公司任職18年，常為客人做家庭理財計劃。歡迎咨詢有關退休👵🏻、強積金💰、儲蓄🌳、教育👶🏻、醫療💉、保障☂️的理財意見。\n祝旅途愉快!!❤️閣下正式保障文件已傳送至電子郵箱!", "{自我介紹}") : DEFAULT_TPL;
 $("f_contact").value = localStorage.getItem(K_CONTACT) || "";
 $("f_name").value = localStorage.getItem(K_NAME) || "";
+$("f_intro").value = localStorage.getItem(K_INTRO) ?? "🌈本人已在公司任職18年，常為客人做家庭理財計劃。歡迎咨詢有關退休👵🏻、強積金💰、儲蓄🌳、教育👶🏻、醫療💉、保障☂️的理財意見。\n祝旅途愉快!!❤️閣下正式保障文件已傳送至電子郵箱!";
 $("btnParse").onclick = parse;
 $("paste").addEventListener("paste", () => setTimeout(parse, 0));
 $("btnClear").onclick = () => {
@@ -283,6 +288,7 @@ $("btnReset").onclick = () => { if (confirm("還原為預設範本？你的修�
 $("tpl").addEventListener("input", () => { localStorage.setItem(K_TPL, $("tpl").value); render(); });
 $("f_contact").addEventListener("input", () => localStorage.setItem(K_CONTACT, $("f_contact").value.trim()));
 $("f_name").addEventListener("input", () => localStorage.setItem(K_NAME, $("f_name").value.trim()));
+$("f_intro").addEventListener("input", () => { localStorage.setItem(K_INTRO, $("f_intro").value); render(); });
 $("f_region").addEventListener("change", () => { $("f_regionCustom").style.display = $("f_region").value === "__custom" ? "" : "none"; render(); });
 document.querySelectorAll("input, #f_insured").forEach(el => el.addEventListener("input", render));
 render();
